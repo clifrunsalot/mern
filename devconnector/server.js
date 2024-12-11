@@ -5,7 +5,10 @@ const express = require('express');
 // Importing mongoose to connect to the database
 const mongoose = require('mongoose');
 
-// Route definitions
+// Importing body-parser to parse incoming requests
+const bodyParser = require('body-parser');
+
+// Route abstractions 
 const profile = require('./routes/api/profile');
 const posts = require('./routes/api/posts');
 const users = require('./routes/api/users');
@@ -20,6 +23,10 @@ mongoose.connect(db)
 
 // Creating an instance of express
 const app = express();
+
+// Using body-parser middleware
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
 // Creating a route to get the home page
 app.get('/', (req, res) => {

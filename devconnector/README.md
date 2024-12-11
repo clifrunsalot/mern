@@ -8,3 +8,4 @@ To see it in action, do the following.
 3. Execute "npm install".
 4. Establish an active instance of MongoDB, either locally or in the cloud, i.e., MongoDB Atlas.
 5. Execute "npm run start".
+6. View URL in a browser. "http://localhost:5000".
