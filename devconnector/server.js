@@ -8,6 +8,9 @@ const mongoose = require('mongoose');
 // Importing body-parser to parse incoming requests
 const bodyParser = require('body-parser');
 
+// Importing passport to authenticate requests
+const passport = require('passport');
+
 // Route abstractions 
 const profile = require('./routes/api/profile');
 const posts = require('./routes/api/posts');
@@ -28,10 +31,11 @@ const app = express();
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-// Creating a route to get the home page
-app.get('/', (req, res) => {
-    res.send('Hello Jean');
-});
+// Passport middleware
+app.use(passport.initialize());
+
+// Passport Config
+require('./config/passport')(passport);
 
 // Route requests to the appropriate route
 app.use('/api/profile', profile);

@@ -2,8 +2,14 @@ const express = require('express');
 const router = express.Router();
 const gravatar = require('gravatar');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const keys = require('../../config/keys');
+const passport = require('passport');
 
-// Load User model
+// Load User model.
+// This is the model that will be used to interact with the database.
+// This model will be used to create, read, update, and delete users.
+// This model will be used to interact with the users collection in the database.
 const User = require('../../models/User');
 
 // @route   GET api/users/test
@@ -14,11 +20,12 @@ router.get('/test', (req, res) => {
 });
 
 // @route   POST api/users/register
-// @desc    Register user
+// @desc    Use this route to register a user. The body of the request should contain the name, email, and password of the user.
 // @access  Public
 router.post('/register', (req, res) => {
 
     // Parse the incoming request
+    // 'User' refers to the model, aka the collection called 'users' in the database.
     User.findOne({ email: req.body.email })
 
         .then(user => {
@@ -65,5 +72,76 @@ router.post('/register', (req, res) => {
             }
         })
 });
+
+// @route   POST api/users/login
+// @desc    Login user / Returning JWT Token. The body of the request should contain the email and password of the user. 
+// @access  Public
+router.post('/login', (req, res) => {
+
+    const email = req.body.email;
+    const password = req.body.password;
+
+    // Find the user by email
+    // 'User' refers to the model, aka the collection called 'users' in the database.
+    User.findOne({ email: email }).then(user => {
+
+        // Check for user
+        if (!user) {
+            return res.status(404).json({ email: 'User not found' });
+        }
+
+        // else check password
+        bcrypt.compare(password, user.password).then(isMatch => {
+
+            // If password is correct
+            if (isMatch) {
+
+                // Create JWT payload
+                const payload = { id: user.id, name: user.name, avatar: user.avatar };
+
+                // Sign the token
+                jwt.sign(
+                    payload,
+                    keys.secretOrKey,
+                    { expiresIn: 3600 },
+                    (err, token) => {
+                        res.json({
+                            success: true,
+                            token: 'Bearer ' + token
+                        });
+                    });
+
+                // Send response
+                res.json({
+                    msg: 'Success',
+                    token: 'Bearer ' + token // This will be used to authenticate the user
+                });
+
+            } else { // If password is incorrect
+
+                // Send response 
+                return res.status(400).json({ password: 'Password incorrect' });
+            }
+        })
+    });
+});
+
+// @route   GET api/users/current
+// @desc    Return current user. The header key 'Authorization' should contain the token string.
+// @access  Private
+router.get('/current', passport.authenticate(
+    'jwt',
+    { session: false }
+),
+    (req, res) => {
+
+        // Send response, which is the user information
+        res.json({
+            id: req.user.id,
+            name: req.user.name,
+            email: req.user.email
+        });
+    }
+);
 
 module.exports = router;
