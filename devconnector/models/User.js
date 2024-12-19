@@ -1,8 +1,13 @@
+// This module provides the interface to the "users" collection in the DB.
+
+// 'mongoose' essentially abstracts the details of establishing a
+// DB connection and performing CRUD operations on the 'users' collection. 
 const mongoose = require('mongoose');
 
+// First create a generic schema object instance
 const Schema = mongoose.Schema;
 
-// Create Schema
+// Second define the schema structure 
 const UserSchema = new Schema({
     name: {
         type: String,
@@ -25,4 +30,5 @@ const UserSchema = new Schema({
     }
 });
 
+// Third expose this object for use
 module.exports = User = mongoose.model('users', UserSchema);
