@@ -163,7 +163,9 @@ router.post('/login', (req, res) => {
 });
 
 // @route   GET api/users/current
-// @desc    Return current user. The header key 'Authorization' should contain the token string.
+// @desc    Return current user. The meta data must be the following:
+//          'Authorization' => Auth Type == Bearer Token
+//          'Token' == "<token minus 'Bearer ' portion>"
 // @access  Private
 router.get('/current', passport.authenticate(
     'jwt',

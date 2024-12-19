@@ -9,3 +9,12 @@ To see it in action, do the following.
 4. Establish an active instance of MongoDB, either locally or in the cloud, i.e., MongoDB Atlas.
 5. Execute "npm run start".
 6. View URL in a browser. "http://localhost:5000".
+
+Testing:
+
+1. Setup:
+   a. Install and instantiate Postman.
+   b. Install and instantiate MongoDB.
+2. Execute "npm run start".
+3. Submit request as described in routes API via Postman
+4. Observe results in DB and in console, where appropriate.
