@@ -1,16 +1,49 @@
+/**
+ * This file contains the routes and custom logic for the user actions.
+ */
+
+//////////////
+//          // 
+// IMPORTS  //
+//          //
+//////////////
+
+// Adds express framework functionality
 const express = require('express');
+
+// Adds router functionality 
 const router = express.Router();
+
+// Adds image retrieval functionality 
 const gravatar = require('gravatar');
+
+// Adds password hashing functionality
 const bcrypt = require('bcryptjs');
+
+// Adds token creation functionality
 const jwt = require('jsonwebtoken');
+
+// Adds keys functionality
 const keys = require('../../config/keys');
+
+// Adds passport functionality
 const passport = require('passport');
 
-// Load User model.
-// This is the model that will be used to interact with the database.
+//////////////
+//          // 
+// DATABASE //
+//          //
+//////////////
+
+// Loads User model.
 // This model will be used to create, read, update, and delete users.
-// This model will be used to interact with the users collection in the database.
 const User = require('../../models/User');
+
+////////////////////
+//                // 
+// ROUTE HANDLING //
+//                //
+////////////////////
 
 // @route   GET api/users/test
 // @desc    Tests users route
@@ -20,7 +53,8 @@ router.get('/test', (req, res) => {
 });
 
 // @route   POST api/users/register
-// @desc    Use this route to register a user. The body of the request should contain the name, email, and password of the user.
+// @desc    Use this route to register a user. The body of the request must contain:
+//          name, email, and password of the user.
 // @access  Public
 router.post('/register', (req, res) => {
 
@@ -74,7 +108,9 @@ router.post('/register', (req, res) => {
 });
 
 // @route   POST api/users/login
-// @desc    Login user / Returning JWT Token. The body of the request should contain the email and password of the user. 
+// @desc    Login user / Returning JWT Token. The body of the request must contain:
+//          the email and password of the user. 
+//          NOTE: values are case-sensitive. 
 // @access  Public
 router.post('/login', (req, res) => {
 
