@@ -29,6 +29,10 @@ const keys = require('../../config/keys');
 // Adds passport functionality
 const passport = require('passport');
 
+// Adds validation functionality
+const validateRegisterInput = require('../../validation/register');
+const validateLoginInput = require('../../validation/login');
+
 //////////////
 //          // 
 // DATABASE //
@@ -57,6 +61,13 @@ router.get('/test', (req, res) => {
 //          name, email, and password of the user.
 // @access  Public
 router.post('/register', (req, res) => {
+
+    // Validate the incoming request
+    const { errors, isValid } = validateRegisterInput(req.body);
+
+    if (!isValid) {
+        return res.status(400).json(errors);
+    }
 
     // Parse the incoming request
     // 'User' refers to the model, aka the collection called 'users' in the database.
@@ -108,11 +119,17 @@ router.post('/register', (req, res) => {
 });
 
 // @route   POST api/users/login
-// @desc    Login user / Returning JWT Token. The body of the request must contain:
-//          the email and password of the user. 
-//          NOTE: values are case-sensitive. 
+// @desc    Use this to log in user. The body of the request must contain:
+//          the email and password of the user. Values are case-sensitive. 
 // @access  Public
 router.post('/login', (req, res) => {
+
+    // Validate the incoming request
+    const { errors, isValid } = validateLoginInput(req.body);
+
+    if (!isValid) {
+        return res.status(400).json(errors);
+    }
 
     const email = req.body.email;
     const password = req.body.password;
@@ -123,7 +140,8 @@ router.post('/login', (req, res) => {
 
         // Check for user
         if (!user) {
-            return res.status(404).json({ email: 'User not found' });
+            errors.email = 'User not found';
+            return res.status(404).json({ errors });
         }
 
         // else check password
@@ -156,16 +174,18 @@ router.post('/login', (req, res) => {
             } else { // If password is incorrect
 
                 // Send response 
-                return res.status(400).json({ password: 'Password incorrect' });
+                errors.password = 'Password incorrect';
+                return res.status(400).json({ errors });
             }
         })
     });
 });
 
 // @route   GET api/users/current
-// @desc    Return current user. The meta data must be the following:
+// @desc    Returns current user. The meta data must be the following:
 //          'Authorization' => Auth Type == Bearer Token
 //          'Token' == "<token minus 'Bearer ' portion>"
+//          The bearer token is generated when the user logs in. See the login route.
 // @access  Private
 router.get('/current', passport.authenticate(
     'jwt',
