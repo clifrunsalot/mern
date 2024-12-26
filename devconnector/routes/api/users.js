@@ -124,6 +124,8 @@ router.post('/register', (req, res) => {
 // @access  Public
 router.post('/login', (req, res) => {
 
+    let payload_token = '';
+
     // Validate the incoming request
     const { errors, isValid } = validateLoginInput(req.body);
 
@@ -159,6 +161,7 @@ router.post('/login', (req, res) => {
                     keys.secretOrKey,
                     { expiresIn: 3600 },
                     (err, token) => {
+                        payload_token = token;
                         res.json({
                             success: true,
                             token: 'Bearer ' + token
@@ -168,7 +171,8 @@ router.post('/login', (req, res) => {
                 // Send response
                 res.json({
                     msg: 'Success',
-                    token: 'Bearer ' + token // This will be used to authenticate the user
+                    // This will be used to authenticate the user
+                    token: 'Bearer ' + payload_token
                 });
 
             } else { // If password is incorrect
