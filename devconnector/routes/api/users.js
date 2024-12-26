@@ -124,8 +124,6 @@ router.post('/register', (req, res) => {
 // @access  Public
 router.post('/login', (req, res) => {
 
-    let payload_token = '';
-
     // Validate the incoming request
     const { errors, isValid } = validateLoginInput(req.body);
 
@@ -159,21 +157,18 @@ router.post('/login', (req, res) => {
                 jwt.sign(
                     payload,
                     keys.secretOrKey,
-                    { expiresIn: 3600 },
+                    { expiresIn: "1 day" },
                     (err, token) => {
-                        payload_token = token;
+                        if (err) {
+                            errors.token = "Error signing token";
+                            return res.status(500).json({ errors });
+                        }
                         res.json({
                             success: true,
+                            // This will be used to authenticate the user
                             token: 'Bearer ' + token
                         });
                     });
-
-                // Send response
-                res.json({
-                    msg: 'Success',
-                    // This will be used to authenticate the user
-                    token: 'Bearer ' + payload_token
-                });
 
             } else { // If password is incorrect
 
@@ -182,7 +177,11 @@ router.post('/login', (req, res) => {
                 return res.status(400).json({ errors });
             }
         })
-    });
+    }).catch(err => {
+        errors.password = 'Error comparing passwords';
+        return res.status(500).json({ errors });
+    }
+    )
 });
 
 // @route   GET api/users/current
