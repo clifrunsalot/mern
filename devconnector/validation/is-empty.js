@@ -1,6 +1,6 @@
 
 /**
- * Check if value is empty 
+ * Check if value is "defined". 
  * @param {*} value is a string, object, or array 
  * @returns {boolean} true if empty, false if not empty
  */

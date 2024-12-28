@@ -34,6 +34,7 @@ const Profile = require('../../models/Profile');
 
 // Adds validation functionality
 const validateProfileInput = require('../../validation/profile');
+const validateEducationInput = require('../../validation/education');
 
 ////////////////////
 //                // 
@@ -64,7 +65,7 @@ router.get('/all', (req, res) => {
 
             res.json(profiles);
         })
-        .catch(err => res.status(404).json({ profile: 'There are no profiles' }));
+        .catch(err => res.status(404).json({ profiles: 'There are no profiles' }));
 
 });
 
@@ -223,6 +224,56 @@ router.post('/', passport.authenticate('jwt', { session: false }),
             }
             );
 
+        //TODO: Consider adding logic for handling unknown fields and inform user.
+
     });
+
+// Export the router
+
+// @route   POST api/profile/education
+// @desc    Add education to profile. Required fields are authentication string
+//          and the following items in the body:
+//          school, degree, fieldofstudy, and from.
+//          This endpoint will only be available to authenticated users. 
+// @access  Private
+router.post('/education', passport.authenticate('jwt', { session: false }),
+    (req, res) => {
+
+        const { errors, isValid } = validateEducationInput(req.body);
+
+        if (!isValid) {
+            return res.status(400).json(errors);
+        }
+
+        // Find the profile by the user id in the request and update the profile with the profileFields object.
+        Profile.findOne({ user: req.user.id })
+            .then(profile => {
+
+                // If the profile exists, update it.
+                if (profile) {
+                    const education = {
+                        school: req.body.school,
+                        degree: req.body.degree,
+                        fieldofstudy: req.body.fieldofstudy,
+                        from: req.body.from,
+                        to: req.body.to,
+                        current: req.body.current,
+                        description: req.body.description
+                    };
+
+                    profile.education.unshift(education);
+                    profile.save().then(profile => res.json(profile));
+
+                }
+            }
+            );
+
+        //TODO: Consider adding logic for handling unknown fields and inform user.
+
+    });
+
+
+
+
 
 module.exports = router;

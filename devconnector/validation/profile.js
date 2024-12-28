@@ -18,7 +18,7 @@ const validateProfileInput = (data) => {
     // Create an empty errors object to store the errors
     let errors = {};
 
-    // Perform initial check to see if the data.email and data.password are empty. 
+    // Perform initial check to see if the data.email and data.password are non-null. 
     data.handle = !isEmpty(data.handle) ? data.handle : '';
     data.status = !isEmpty(data.status) ? data.status : '';
     data.skills = !isEmpty(data.skills) ? data.skills : '';
@@ -75,7 +75,7 @@ const validateProfileInput = (data) => {
         }
     }
 
-    // Returns the errors object and isValid value derived from the isEmpty function.
+    // Returns the errors object and isValid value derived from validation.
     return {
         errors,
         isValid: isEmpty(errors)

@@ -18,7 +18,7 @@ const validateLoginInput = (data) => {
     // Create an empty errors object to store the errors
     let errors = {};
 
-    // Perform initial check to see if the data.email and data.password are empty. 
+    // Perform initial check to see if the data.email and data.password are non-null. 
     data.email = !isEmpty(data.email) ? data.email : '';
     data.password = !isEmpty(data.password) ? data.password : '';
 
