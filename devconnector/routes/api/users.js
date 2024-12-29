@@ -205,4 +205,26 @@ router.get('/current', passport.authenticate(
     }
 );
 
+// @route   DELETE api/users
+// @desc    Remove profile and then user. 
+// @access  Private
+router.delete('/', passport.authenticate('jwt', { session: false }),
+    (req, res) => {
+
+        // Find the profile by the user id in the request.
+        // NOTE: The user id is stored in the token, so we can use that to find the profile. 
+        Profile.findOneAndDelete({ user: req.user._id })
+            .then(profile => {
+
+                // Find the user by the user id in the request.
+                User.findOneAndDelete({ _id: req.user._id })
+                    .then(() => res.json({ success: true }))
+                    .catch(err => res.status(404).json(err));
+            })
+            .catch(err => res.status(404).json(err));
+
+    });
+
+
+
 module.exports = router;
