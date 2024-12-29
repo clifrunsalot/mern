@@ -35,6 +35,7 @@ const Profile = require('../../models/Profile');
 // Adds validation functionality
 const validateProfileInput = require('../../validation/profile');
 const validateEducationInput = require('../../validation/education');
+const validateExperienceInput = require('../../validation/experience');
 
 ////////////////////
 //                // 
@@ -228,13 +229,10 @@ router.post('/', passport.authenticate('jwt', { session: false }),
 
     });
 
-// Export the router
-
 // @route   POST api/profile/education
-// @desc    Add education to profile. Required fields are authentication string
-//          and the following items in the body:
+// @desc    Add experience to profile. Required fields are authentication string
+//          and the following mandatory items in the body:
 //          school, degree, fieldofstudy, and from.
-//          This endpoint will only be available to authenticated users. 
 // @access  Private
 router.post('/education', passport.authenticate('jwt', { session: false }),
     (req, res) => {
@@ -268,12 +266,53 @@ router.post('/education', passport.authenticate('jwt', { session: false }),
             }
             );
 
-        //TODO: Consider adding logic for handling unknown fields and inform user.
+        //TODO: 
+        // 1. Consider adding logic for handling unknown fields and inform user.
+        // 2. Consider updating existing entries.
 
     });
 
+// @route   POST api/profile/experience
+// @desc    Add experience to profile. Required fields are authentication string
+//          and the following items in the body:
+//          title, company, and from.
+// @access  Private
+router.post('/experience', passport.authenticate('jwt', { session: false }),
+    (req, res) => {
 
+        const { errors, isValid } = validateExperienceInput(req.body);
 
+        if (!isValid) {
+            return res.status(400).json(errors);
+        }
 
+        // Find the profile by the user id in the request and update the profile with the profileFields object.
+        Profile.findOne({ user: req.user.id })
+            .then(profile => {
+
+                // If the profile exists, update it.
+                if (profile) {
+                    const experience = {
+                        title: req.body.title,
+                        company: req.body.company,
+                        location: req.body.location,
+                        from: req.body.from,
+                        to: req.body.to,
+                        current: req.body.current,
+                        description: req.body.description
+                    };
+
+                    profile.experience.unshift(experience);
+                    profile.save().then(profile => res.json(profile));
+
+                }
+            }
+            );
+
+        //TODO: 
+        // 1. Consider adding logic for handling unknown fields and inform user.
+        // 2. Consider updating existing entries.
+
+    });
 
 module.exports = router;
