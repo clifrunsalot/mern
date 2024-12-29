@@ -123,10 +123,10 @@ router.get('/handle/:handle', (req, res) => {
         .catch(err => res.status(404).json(err));
 })
 
-// @route   GET api/profile/user/:user_id
+// @route   GET api/profile/user/:_id
 // @desc    Get profile by user ID
 // @access  Public
-router.get('/user/:user_id', (req, res) => {
+router.get('/user/:_id', (req, res) => {
 
     // Create an empty object to store any errors.
     const errors = {};
@@ -135,7 +135,7 @@ router.get('/user/:user_id', (req, res) => {
     // The 'user' field in the profile collection is unique. The 'findOne' method will
     // return the first profile that matches the query. The query is that the 'user' field in the
     // profile collection matches the 'user_id' field in the request.
-    Profile.findOne({ user: req.params.user_id })
+    Profile.findOne({ user: req.params._id })
         .populate('user', ['name', 'avatar'])
         .then(profile => {
             if (!profile) {
@@ -229,12 +229,12 @@ router.post('/', passport.authenticate('jwt', { session: false }),
 
     });
 
-// @route   POST api/profile/education
-// @desc    Add experience to profile. Required fields are authentication string
+// @route   PUT api/profile/education
+// @desc    Add education to profile. Required fields are authentication string
 //          and the following mandatory items in the body:
 //          school, degree, fieldofstudy, and from.
 // @access  Private
-router.post('/education', passport.authenticate('jwt', { session: false }),
+router.put('/education', passport.authenticate('jwt', { session: false }),
     (req, res) => {
 
         const { errors, isValid } = validateEducationInput(req.body);
@@ -243,12 +243,14 @@ router.post('/education', passport.authenticate('jwt', { session: false }),
             return res.status(400).json(errors);
         }
 
-        // Find the profile by the user id in the request and update the profile with the profileFields object.
+        // Find the profile by the user id in the request.
+        // The user id is stored in the token, so we can use that to find the profile.
         Profile.findOne({ user: req.user.id })
             .then(profile => {
 
-                // If the profile exists, update it.
+                // If the profile exists, simply add it. 
                 if (profile) {
+
                     const education = {
                         school: req.body.school,
                         degree: req.body.degree,
@@ -259,25 +261,103 @@ router.post('/education', passport.authenticate('jwt', { session: false }),
                         description: req.body.description
                     };
 
+                    // Insert entry at beginning of array.
                     profile.education.unshift(education);
                     profile.save().then(profile => res.json(profile));
-
                 }
-            }
-            );
+            });
 
         //TODO: 
-        // 1. Consider adding logic for handling unknown fields and inform user.
-        // 2. Consider updating existing entries.
+        // Consider adding logic for handling unknown fields and informing user.
 
     });
 
-// @route   POST api/profile/experience
+// @route   POST api/profile/education/:_id
+// @desc    Update education to profile. Required fields are authentication string
+//          and the following mandatory items in the body:
+//          school, degree, fieldofstudy, and from.
+// @access  Private
+router.post('/education/:_id', passport.authenticate('jwt', { session: false }),
+    (req, res) => {
+
+        const { errors, isValid } = validateEducationInput(req.body);
+
+        if (!isValid) {
+            return res.status(400).json(errors);
+        }
+
+        // Find the profile by the user id in the request.
+        // The user id is stored in the token, so we can use that to find the profile.
+        Profile.findOne({ user: req.user.id })
+            .then(profile => {
+
+                // If the profile exists, drill down into education. 
+                if (profile) {
+
+                    const foundIdx = profile.education.map(item => item.id).indexOf(req.params._id);
+
+                    // If the education entry is found, apply updates. 
+                    if (foundIdx != -1) {
+
+                        const education = {
+                            school: req.body.school,
+                            degree: req.body.degree,
+                            fieldofstudy: req.body.fieldofstudy,
+                            from: req.body.from,
+                            to: req.body.to,
+                            current: req.body.current,
+                            description: req.body.description
+                        };
+
+                        profile.education[foundIdx] = education;
+                        profile.save().then(profile => res.json(profile));
+
+                    } else {
+                        res.status(404).json({ education: 'Education not found' });
+                    }
+                }
+            });
+
+        //TODO: 
+        // Consider adding logic for handling unknown fields and informing user.
+
+    });
+
+// @route   DELETE api/profile/education/:_id
+// @desc    Remove education from profile. 
+// @access  Private
+router.delete('/education/:_id', passport.authenticate('jwt', { session: false }),
+    (req, res) => {
+
+        // Find the profile by the user id in the request.
+        // NOTE: The user id is stored in the token, so we can use that to find the profile. 
+        Profile.findOne({ user: req.user._id })
+            .then(profile => {
+
+                // If the profile exists, update it.
+                if (profile) {
+
+                    const foundIdx = profile.education.map(item => item.id).indexOf(req.params._id);
+                    if (foundIdx != -1) {
+
+                        // Use the 'pull' operator to remove the education entry from the profile.
+                        profile.education.pull(req.params._id);
+                        profile.save().then(profile => res.json(profile));
+
+                    } else {
+                        res.status(404).json({ education: 'Education not found' });
+                    }
+                }
+            })
+            .catch(err => res.status(404).json(err));
+    });
+
+// @route   PUT api/profile/experience
 // @desc    Add experience to profile. Required fields are authentication string
 //          and the following items in the body:
 //          title, company, and from.
 // @access  Private
-router.post('/experience', passport.authenticate('jwt', { session: false }),
+router.put('/experience', passport.authenticate('jwt', { session: false }),
     (req, res) => {
 
         const { errors, isValid } = validateExperienceInput(req.body);
@@ -302,6 +382,7 @@ router.post('/experience', passport.authenticate('jwt', { session: false }),
                         description: req.body.description
                     };
 
+                    // Insert entry at beginning of array.
                     profile.experience.unshift(experience);
                     profile.save().then(profile => res.json(profile));
 
@@ -311,7 +392,83 @@ router.post('/experience', passport.authenticate('jwt', { session: false }),
 
         //TODO: 
         // 1. Consider adding logic for handling unknown fields and inform user.
-        // 2. Consider updating existing entries.
+
+    });
+// @route   POST api/profile/experience/:_id
+// @desc    Update experience to profile. Required fields are authentication string
+//          and the following items in the body:
+//          title, company, and from.
+// @access  Private
+router.post('/experience/:_id', passport.authenticate('jwt', { session: false }),
+    (req, res) => {
+
+        const { errors, isValid } = validateExperienceInput(req.body);
+
+        if (!isValid) {
+            return res.status(400).json(errors);
+        }
+
+        // Find the profile by the user id in the request.
+        Profile.findOne({ user: req.user.id })
+            .then(profile => {
+
+                // If the profile exists, update it.
+                if (profile) {
+
+                    const foundIdx = profile.experience.map(item => item.id).indexOf(req.params._id);
+                    if (foundIdx != -1) {
+
+                        const experience = {
+                            title: req.body.title,
+                            company: req.body.company,
+                            location: req.body.location,
+                            from: req.body.from,
+                            to: req.body.to,
+                            current: req.body.current,
+                            description: req.body.description
+                        };
+
+                        profile.experience[foundIdx] = experience;
+                        profile.save().then(profile => res.json(profile));
+
+                    } else {
+                        res.status(404).json({ experience: 'Experience not found' });
+                    }
+                }
+            });
+
+        //TODO: 
+        // 1. Consider adding logic for handling unknown fields and inform user.
+
+    });
+
+// @route   DELETE api/profile/experience/:_id
+// @desc    Remove experience from profile. 
+// @access  Private
+router.delete('/experience/:_id', passport.authenticate('jwt', { session: false }),
+    (req, res) => {
+
+        // Find the profile by the user id in the request.
+        // NOTE: The user id is stored in the token, so we can use that to find the profile. 
+        Profile.findOne({ user: req.user._id })
+            .then(profile => {
+
+                // If the profile exists, update it.
+                if (profile) {
+
+                    const foundIdx = profile.experience.map(item => item.id).indexOf(req.params._id);
+                    if (foundIdx != -1) {
+
+                        // Use the 'pull' operator to remove the education entry from the profile.
+                        profile.experience.pull(req.params._id);
+                        profile.save().then(profile => res.json(profile));
+
+                    } else {
+                        res.status(404).json({ experience: 'Experience not found' });
+                    }
+                }
+            })
+            .catch(err => res.status(404).json(err));
 
     });
 
